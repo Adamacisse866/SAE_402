@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jeu de Connexions Cinéma</title>
+    <link rel="stylesheet" href="css/style.css">
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+<body>
+    <div class="container">
+        <div id="start-screen" class="screen">
+            <h1>Jeu de Connexions Cinéma</h1>
+            <button id="start-button">Commencer une partie</button>
+        </div>
+        <div id="game-screen" class="screen hidden">
+            <h2 id="movie-title" class="movie-title"></h2>
+            <div id="graph-container"></div>
+            <div class="guessed-actors" id="guessed-actors"></div>
+        </div>
+    </div>
+
+    <script src="js/graph.js"></script>
+    <script src="js/main.js"></script>
+</body>
+</html> 

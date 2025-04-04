@@ -1,0 +1,727 @@
+openapi: 3.0.0
+info:
+  title: API du Jeu de Connexion Cinéma
+  version: 1.0.0
+  description: API pour le jeu de connexion entre films et acteurs américains de 1980 à 2023, utilisant la base de données movies_data-1980-2023
+
+servers:
+  - url: http://localhost:3000/api
+    description: Serveur de développement
+
+components:
+  schemas:
+    Movie:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifiant unique du film
+        title:
+          type: string
+          description: Titre du film
+        year:
+          type: integer
+          description: Année de sortie
+        director:
+          type: string
+          description: Réalisateur du film
+        posterUrl:
+          type: string
+          description: URL de l'affiche du film
+        overview:
+          type: string
+          description: Synopsis du film
+        genres:
+          type: array
+          items:
+            type: string
+          description: Liste des genres du film
+        actors:
+          type: array
+          items:
+            $ref: '#/components/schemas/Actor'
+          description: Liste des acteurs du film
+
+    Actor:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifiant unique de l'acteur
+        name:
+          type: string
+          description: Nom de l'acteur
+        photoUrl:
+          type: string
+          description: URL de la photo de l'acteur
+        biography:
+          type: string
+          description: Biographie de l'acteur
+        movies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Movie'
+          description: Liste des films de l'acteur
+
+    Genre:
+      type: object
+      properties:
+        id:
+          type: string
+          description: Identifiant unique du genre
+        name:
+          type: string
+          description: Nom du genre
+        movieCount:
+          type: integer
+          description: Nombre de films dans ce genre
+
+    GameState:
+      type: object
+      required:
+        - currentMovie
+        - discoveredActors
+        - score
+        - timeSpent
+        - currentLevel
+        - combo
+      properties:
+        currentMovie:
+          type: string
+          description: ID du film actuel
+        discoveredActors:
+          type: array
+          items:
+            type: string
+          description: Liste des IDs des acteurs découverts
+        score:
+          type: integer
+          description: Score actuel
+        timeSpent:
+          type: integer
+          description: Temps passé en secondes
+        currentLevel:
+          type: integer
+          description: Niveau actuel
+        combo:
+          type: integer
+          description: Multiplicateur de combo
+        activePower:
+          type: string
+          description: Pouvoir actif
+        activeBonus:
+          type: string
+          description: Bonus actif
+
+    GameProgress:
+      type: object
+      properties:
+        message:
+          type: string
+          description: Message de confirmation
+        bonus:
+          type: integer
+          description: Bonus calculé
+        totalScore:
+          type: integer
+          description: Score total
+        powerEffect:
+          type: object
+          properties:
+            type:
+              type: string
+            duration:
+              type: integer
+        comboBonus:
+          type: object
+          properties:
+            type:
+              type: string
+            duration:
+              type: integer
+
+    WikiInfo:
+      type: object
+      required:
+        - title
+        - extract
+        - imageUrl
+        - fullUrl
+      properties:
+        title:
+          type: string
+          description: Titre Wikipedia
+        extract:
+          type: string
+          description: Extrait de l'article
+        imageUrl:
+          type: string
+          description: URL de l'image
+        fullUrl:
+          type: string
+          description: URL de l'article complet
+
+    LeaderboardEntry:
+      type: object
+      properties:
+        playerName:
+          type: string
+          description: Nom du joueur
+        score:
+          type: integer
+          description: Score du joueur
+        date:
+          type: string
+          format: date-time
+          description: Date de la partie
+
+    LevelConfig:
+      type: object
+      required:
+        - hintCost
+        - wrongAnswerPenalty
+        - maxCombo
+        - pointsPerCorrectAnswer
+        - maxHintsPerGuess
+        - timeLimit
+        - powers
+      properties:
+        hintCost:
+          type: integer
+          description: Coût d'un indice
+        wrongAnswerPenalty:
+          type: integer
+          description: Pénalité pour une mauvaise réponse
+        maxCombo:
+          type: integer
+          description: Combo maximum
+        pointsPerCorrectAnswer:
+          type: integer
+          description: Points par bonne réponse
+        maxHintsPerGuess:
+          type: integer
+          description: Nombre maximum d'indices par devinette
+        timeLimit:
+          type: integer
+          description: Limite de temps en secondes
+        powers:
+          type: object
+          properties:
+            focus:
+              type: object
+              properties:
+                cost:
+                  type: integer
+                description:
+                  type: string
+                duration:
+                  type: integer
+                type:
+                  type: string
+            insight:
+              type: object
+              properties:
+                cost:
+                  type: integer
+                description:
+                  type: string
+                duration:
+                  type: integer
+                type:
+                  type: string
+            revelation:
+              type: object
+              properties:
+                cost:
+                  type: integer
+                description:
+                  type: string
+                duration:
+                  type: integer
+                type:
+                  type: string
+
+    MovieStats:
+      type: object
+      required:
+        - totalMovies
+        - avgActorsPerMovie
+      properties:
+        totalMovies:
+          type: integer
+          description: Nombre total de films
+        avgActorsPerMovie:
+          type: number
+          description: Moyenne d'acteurs par film
+
+    ActorStats:
+      type: object
+      required:
+        - totalActors
+        - totalMoviesWithActors
+        - avgActorsPerMovie
+      properties:
+        totalActors:
+          type: integer
+          description: Nombre total d'acteurs
+        totalMoviesWithActors:
+          type: integer
+          description: Nombre total de films avec des acteurs
+        avgActorsPerMovie:
+          type: number
+          description: Moyenne d'acteurs par film
+
+    GenreStats:
+      type: object
+      required:
+        - totalGenres
+        - totalMoviesWithGenres
+        - avgGenresPerMovie
+      properties:
+        totalGenres:
+          type: integer
+          description: Nombre total de genres
+        totalMoviesWithGenres:
+          type: integer
+          description: Nombre total de films avec des genres
+        avgGenresPerMovie:
+          type: number
+          description: Moyenne de genres par film
+
+    ConnectionStats:
+      type: object
+      required:
+        - totalMovies
+        - totalActors
+        - totalGenres
+        - totalConnections
+      properties:
+        totalMovies:
+          type: integer
+          description: Nombre total de films
+        totalActors:
+          type: integer
+          description: Nombre total d'acteurs
+        totalGenres:
+          type: integer
+          description: Nombre total de genres
+        totalConnections:
+          type: integer
+          description: Nombre total de connexions
+
+paths:
+  /movies:
+    get:
+      summary: Récupérer tous les films
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+          description: Numéro de page
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 10
+          description: Nombre d'éléments par page
+      responses:
+        '200':
+          description: Liste des films
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  movies:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Movie'
+                  total:
+                    type: integer
+                  page:
+                    type: integer
+                  totalPages:
+                    type: integer
+
+  /movies/random:
+    get:
+      summary: Obtenir un film aléatoire
+      responses:
+        '200':
+          description: Film aléatoire
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+
+  /movies/stats:
+    get:
+      summary: Obtenir les statistiques des films
+      responses:
+        '200':
+          description: Statistiques des films
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MovieStats'
+
+  /movies/{id}:
+    get:
+      summary: Obtenir un film spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Film trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Movie'
+        '404':
+          description: Film non trouvé
+
+  /movies/{id}/actors:
+    get:
+      summary: Obtenir les acteurs d'un film
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des acteurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Actor'
+
+  /actors:
+    get:
+      summary: Récupérer tous les acteurs
+      responses:
+        '200':
+          description: Liste des acteurs
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Actor'
+
+  /actors/random:
+    get:
+      summary: Obtenir un acteur aléatoire
+      responses:
+        '200':
+          description: Acteur aléatoire
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actor'
+
+  /actors/stats:
+    get:
+      summary: Obtenir les statistiques des acteurs
+      responses:
+        '200':
+          description: Statistiques des acteurs
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ActorStats'
+
+  /actors/{id}:
+    get:
+      summary: Obtenir un acteur spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Acteur trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Actor'
+        '404':
+          description: Acteur non trouvé
+
+  /actors/{id}/movies:
+    get:
+      summary: Obtenir les films d'un acteur
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des films
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+
+  /genres:
+    get:
+      summary: Récupérer tous les genres
+      responses:
+        '200':
+          description: Liste des genres
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Genre'
+
+  /genres/stats:
+    get:
+      summary: Obtenir les statistiques des genres
+      responses:
+        '200':
+          description: Statistiques des genres
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GenreStats'
+
+  /genres/{id}:
+    get:
+      summary: Obtenir un genre spécifique
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Genre trouvé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Genre'
+        '404':
+          description: Genre non trouvé
+
+  /genres/{id}/movies:
+    get:
+      summary: Obtenir les films d'un genre
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Liste des films
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Movie'
+
+  /game/start:
+    get:
+      summary: Démarrer une nouvelle partie
+      responses:
+        '200':
+          description: État initial du jeu
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [movie, actor]
+                  data:
+                    oneOf:
+                      - $ref: '#/components/schemas/Movie'
+                      - $ref: '#/components/schemas/Actor'
+
+  /game/progress:
+    post:
+      summary: Sauvegarder la progression du jeu
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/GameState'
+      responses:
+        '200':
+          description: Progression sauvegardée
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/GameProgress'
+
+  /game/movies/{id}/hint:
+    get:
+      summary: Obtenir un indice pour un film
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Indice trouvé
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  name:
+                    type: string
+                  connection_count:
+                    type: integer
+        '500':
+          description: Erreur lors de la récupération de l'indice
+
+  /game/movies/{id}/wiki:
+    get:
+      summary: Obtenir les informations Wikipedia d'un film
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Informations Wikipedia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WikiInfo'
+        '404':
+          description: Film non trouvé
+
+  /game/actors/{id}/wiki:
+    get:
+      summary: Obtenir les informations Wikipedia d'un acteur
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Informations Wikipedia
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WikiInfo'
+        '404':
+          description: Acteur non trouvé
+
+  /game/leaderboard:
+    get:
+      summary: Obtenir le classement des joueurs
+      responses:
+        '200':
+          description: Classement
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LeaderboardEntry'
+
+  /game/level-config:
+    get:
+      summary: Obtenir la configuration des niveaux
+      responses:
+        '200':
+          description: Configuration des niveaux
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties:
+                  $ref: '#/components/schemas/LevelConfig'
+
+  /search:
+    get:
+      summary: Rechercher des films ou acteurs
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+          description: Terme de recherche
+      responses:
+        '200':
+          description: Résultats de la recherche
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  oneOf:
+                    - $ref: '#/components/schemas/Movie'
+                    - $ref: '#/components/schemas/Actor'
+
+  /connections/{id}:
+    get:
+      summary: Obtenir les connexions d'un élément
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Connexions trouvées
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  type:
+                    type: string
+                    enum: [movie, actor]
+                  connections:
+                    type: array
+                    items:
+                      oneOf:
+                        - $ref: '#/components/schemas/Movie'
+                        - $ref: '#/components/schemas/Actor'
+        '404':
+          description: Élément non trouvé
+
+  /connections/stats:
+    get:
+      summary: Obtenir les statistiques globales des connexions
+      responses:
+        '200':
+          description: Statistiques des connexions
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ConnectionStats' 
